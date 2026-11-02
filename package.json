@@ -1,0 +1,17 @@
+{
+  "name": "orya-parking",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24.14.0 <25" },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test tests/api.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "access": "node scripts.mjs access",
+    "simulate": "node scripts.mjs simulate"
+  },
+  "dependencies": { "qrcode": "1.5.4" },
+  "devDependencies": { "playwright": "1.56.1" }
+}
