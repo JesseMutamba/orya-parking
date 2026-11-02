@@ -8,6 +8,13 @@ import QRCode from 'qrcode';
 import { DemoPaymentProvider } from './payment-provider.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
+function publicOriginFrom(value) {
+  if (!value) return null;
+  const url = new URL(value);
+  if (url.protocol !== 'https:' || url.username || url.password || url.pathname !== '/' || url.search || url.hash)
+    throw Error('ORYA_PUBLIC_ORIGIN must be an HTTPS origin without a path or credentials.');
+  return url;
+}
 const secret = () => randomBytes(32).toString('base64url');
 const hash = s => createHash('sha256').update(s).digest('hex');
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
@@ -15,6 +22,10 @@ const cleanPlate = p => { if (typeof p !== 'string' || !/^[A-Za-z0-9 -]{3,16}$/.
 const int = (n, min, max) => { if (!Number.isSafeInteger(n) || n < min || n > max) fail(400, `Expected a whole number from ${min} to ${max}.`); return n; };
 const key = x => { if (typeof x !== 'string' || !/^[A-Za-z0-9_-]{16,100}$/.test(x)) fail(400, 'A valid idempotency key is required.'); return x; };
 export function createApp(options = {}) {
+  const publicOrigin = publicOriginFrom(options.publicOrigin);
+  if (publicOrigin && (!options.dataDir || options.harness || process.env.ORYA_HARNESS === '1'))
+    throw Error('Hosted testing requires an explicit data directory and a disabled simulator harness.');
+  const secureCookie = publicOrigin ? '; Secure' : '';
   const dataDir = options.dataDir || resolve(root, '.local'); mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   const db = new DatabaseSync(resolve(dataDir, 'parking.sqlite')); db.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
   db.exec(`
@@ -79,9 +90,16 @@ export function createApp(options = {}) {
     res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
     try {
       const host = req.headers.host || '';
-      if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(host)) fail(403, 'This demo accepts loopback hosts only.');
+      // Railway probes use an internal hostname; this route exposes no app data.
+      if (publicOrigin && req.method === 'GET' && req.url === '/api/health') return send(200, { ok: true, demo: true });
+      const allowedHost = publicOrigin
+        ? host === publicOrigin.host && req.headers['x-forwarded-proto'] === 'https'
+        : /^(127\.0\.0\.1|localhost)(:\d+)?$/.test(host);
+      if (!allowedHost) fail(403, 'This host or connection is not allowed.');
+      if (publicOrigin) res.setHeader('Strict-Transport-Security', 'max-age=86400');
       const url = new URL(req.url, `http://${host}`), path = url.pathname, method = req.method;
-      if (method !== 'GET' && req.headers.origin && req.headers.origin !== `http://${host}`) fail(403, 'Cross-origin request denied.');
+      const expectedOrigin = publicOrigin?.origin || `http://${host}`;
+      if (method !== 'GET' && ((req.headers.origin && req.headers.origin !== expectedOrigin) || req.headers['sec-fetch-site'] === 'cross-site')) fail(403, 'Cross-origin request denied.');
       let body = {};
       if (method === 'POST') {
         if (!req.headers['content-type']?.startsWith('application/json')) fail(415, 'JSON is required.');
@@ -95,7 +113,7 @@ export function createApp(options = {}) {
       const driverSession = () => { const token = req.headers.authorization?.replace(/^Bearer /, ''); if (!token) fail(401, 'A private pass link is required.'); const s = get('SELECT * FROM sessions WHERE access=?', token); if (!s) fail(404, 'Pass not found.'); return s; };
       if (path === '/api/health' && method === 'GET') return send(200, { ok: true, demo: true });
       if (path === '/api/zone' && method === 'GET') return send(200, { ...zone(url.searchParams.get('code') || 'CG-01'), serverTime: now() });
-      if (path === '/api/qr' && method === 'GET') return send(200, await QRCode.toString(`http://${host}/?zone=CG-01`, { type: 'svg', margin: 2 }), 'image/svg+xml');
+      if (path === '/api/qr' && method === 'GET') return send(200, await QRCode.toString(`${expectedOrigin}/?zone=CG-01`, { type: 'svg', margin: 2 }), 'image/svg+xml');
       if (path === '/api/login' && method === 'POST') {
         const bucket = req.socket.remoteAddress, f = loginFailures.get(bucket) || { count: 0, until: 0 };
         if (f.until > now()) fail(429, 'Too many sign-in attempts. Try again in five minutes.');
@@ -104,10 +122,10 @@ export function createApp(options = {}) {
         if (!u || !timingSafeEqual(candidate, Buffer.from(u.digest, 'hex'))) { f.count++; if (f.count >= 10) { f.until = now() + 300000; f.count = 0; } loginFailures.set(bucket, f); fail(401, 'Incorrect username or password.'); }
         loginFailures.delete(bucket); const token = secret(); run('DELETE FROM auth WHERE expires<=?', now());
         run('INSERT INTO auth VALUES(?,?,?)', hash(token), u.id, now() + 8 * 3600000);
-        res.setHeader('Set-Cookie', `orya_staff=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`);
+        res.setHeader('Set-Cookie', `orya_staff=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie}`);
         return send(200, { id: u.id, role: u.role, zone: u.zone });
       }
-      if (path === '/api/logout' && method === 'POST') { if (cookie) run('DELETE FROM auth WHERE token=?', hash(cookie)); res.setHeader('Set-Cookie', 'orya_staff=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'); return send(200, { ok: true }); }
+      if (path === '/api/logout' && method === 'POST') { if (cookie) run('DELETE FROM auth WHERE token=?', hash(cookie)); res.setHeader('Set-Cookie', `orya_staff=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secureCookie}`); return send(200, { ok: true }); }
       if (path === '/api/me' && method === 'GET') { const u = staff(); return send(200, { id: u.id, role: u.role, zone: u.zone }); }
       if (path === '/api/quotes' && method === 'POST') {
         const z = zone(body.zone); if (body.assisted) staff(null, z.id);
@@ -194,7 +212,10 @@ export function createApp(options = {}) {
   return { server, db, access, applyEvent, tick, close: async () => { clearInterval(timer); await new Promise(r => server.close(r)); db.close(); } };
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const app = createApp(); const port = Number(process.env.PORT || 3040);
-  app.server.listen(port, '127.0.0.1', () => console.log(`Orya DEMO · http://127.0.0.1:${port}\nRun npm run access for generated staff credentials. No live payments. Harness ${process.env.ORYA_HARNESS === '1' ? 'enabled' : 'disabled'}.`));
+  const publicOrigin = publicOriginFrom(process.env.ORYA_PUBLIC_ORIGIN);
+  if (process.env.RAILWAY_ENVIRONMENT_ID && !publicOrigin) throw Error('Set ORYA_PUBLIC_ORIGIN to the Railway HTTPS origin.');
+  const app = createApp({ publicOrigin: publicOrigin?.origin, dataDir: process.env.ORYA_DATA_DIR }); const port = Number(process.env.PORT || 3040);
+  const bindHost = publicOrigin ? '0.0.0.0' : '127.0.0.1';
+  app.server.listen(port, bindHost, () => console.log(`Orya DEMO · ${publicOrigin?.origin || `http://${bindHost}:${port}`} · listening ${bindHost}:${app.server.address().port}\nRun npm run access for generated staff credentials. No live payments. Harness ${process.env.ORYA_HARNESS === '1' ? 'enabled' : 'disabled'}.`));
   for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, async () => { await app.close(); process.exit(0); });
 }
