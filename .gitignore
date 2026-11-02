@@ -4,3 +4,11 @@ test-results/
 *.sqlite*
 .env*
 .DS_Store
+
+# Local Xcode state and generated build products
+mobile/ios/build/
+DerivedData/
+**/xcuserdata/
+*.xcuserstate
+*.ipa
+*.xcarchive/

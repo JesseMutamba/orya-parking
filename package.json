@@ -3,15 +3,38 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24.14.0 <25" },
+  "engines": {
+    "node": ">=24.14.0 <25"
+  },
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
-    "test": "node --test tests/api.test.mjs",
+    "test": "node --test tests/api.test.mjs tests/pass-codes.test.mjs",
     "test:browser": "node tests/browser.mjs",
     "access": "node scripts.mjs access",
-    "simulate": "node scripts.mjs simulate"
+    "simulate": "node scripts.mjs simulate",
+    "test:driver-browser": "node tests/driver-browser.mjs",
+    "test:admin-browser": "node tests/admin-browser.mjs",
+    "test:tickets-browser": "node tests/tickets-browser.mjs",
+    "seed:demo-day": "node seed-demo-day.mjs",
+    "test:map-browser": "node tests/map-browser.mjs",
+    "test:mobile": "node --test tests/mobile.test.mjs",
+    "test:mobile-browser": "node tests/mobile-browser.mjs",
+    "ios:project": "python3 mobile/ios/generate-project.py",
+    "ios:open": "open mobile/ios/OryaMobile.xcodeproj",
+    "test:pass-code-browser": "node tests/pass-code-browser.mjs",
+    "test:hosted": "node --test tests/hosted.test.mjs tests/railway-startup.test.mjs",
+    "test:i18n": "node --test tests/i18n.test.mjs",
+    "test:i18n-browser": "node tests/i18n-browser.mjs"
   },
-  "dependencies": { "qrcode": "1.5.4" },
-  "devDependencies": { "playwright": "1.56.1" }
+  "dependencies": {
+    "@maplibre/maplibre-gl-leaflet": "0.1.4",
+    "jsqr": "1.4.0",
+    "leaflet": "1.9.4",
+    "maplibre-gl": "6.16.0",
+    "qrcode": "1.5.4"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
 }

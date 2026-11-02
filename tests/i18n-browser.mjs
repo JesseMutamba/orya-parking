@@ -1,0 +1,58 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {mkdtempSync,mkdirSync,rmSync,writeFileSync} from 'node:fs';
+import {tmpdir} from 'node:os';import{join}from'node:path';import{randomUUID}from'node:crypto';
+import{createApp}from'../server.mjs';import{stubMapTiles}from'./map-fixture.mjs';
+const dir=mkdtempSync(join(tmpdir(),'orya-french-')),app=createApp({dataDir:dir,harness:true,paymentDelay:120000});
+app.seedDemoDay();
+await new Promise(r=>app.server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${app.server.address().port}`;
+const browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
+const context=await browser.newContext({viewport:{width:1440,height:1050}}),staff=await browser.newContext({viewport:{width:1440,height:1050}});await stubMapTiles(context);await stubMapTiles(staff);
+const p=await context.newPage(),m=await staff.newPage(),errors=[],checks=[],untranslated=new Set();mkdirSync('test-results',{recursive:true});
+for(const page of[p,m])page.on('pageerror',e=>errors.push(e.message));
+async function post(c,path,data,headers={}){const r=await c.request.post(base+path,{data,headers});assert.ok(r.ok(),`${path}: ${await r.text()}`);return r.json();}
+async function lang(page,value){await page.locator(`[data-language="${value}"]`).click();await page.waitForFunction(v=>document.documentElement.lang===v,value);}
+async function audit(page){await page.waitForTimeout(80);const unknown=await page.evaluate(()=>{
+ const values=new Set(Object.values(oryaFrench)),out=[],walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+ while(walker.nextNode()){const node=walker.currentNode,el=node.parentElement;if(!el||el.closest('script,style,[translate="no"],[data-language-toggle]')||!el.checkVisibility())continue;const source=oryaI18nCore.normalize(i18n.source(node));if(!/[A-Za-z]/.test(source))continue;
+ const translated=oryaI18nCore.translate(source,'fr');if(translated===source&&!values.has(source)&&!/^\d|CDF|SYN |CG-|DEMO-|RSV-|TK-|CASH-|RC-|VIS-|Q-|· SYN-PASS-/ .test(source))out.push(source);
+ }
+ return out;
+ });unknown.forEach(t=>untranslated.add(t));}
+async function shots(page,name){for(const width of[1440,768,390,320]){await page.setViewportSize({width,height:900});await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name} overflow at ${width}`);await page.screenshot({path:`test-results/${name}-${width}.png`,fullPage:true});}await page.setViewportSize({width:1440,height:1050});}
+async function check(name,fn){try{await fn();checks.push(name);console.log('PASS',name);}catch(e){await p.screenshot({path:'test-results/french-driver-failure.png',fullPage:true});await m.screenshot({path:'test-results/french-staff-failure.png',fullPage:true});throw e;}}
+try{
+ await check('web toggle preserves signup inputs and uses French validation',async()=>{
+  await p.goto(base+'/account?mode=signup');await p.locator('#driver-name').fill('Cash');await p.locator('#driver-email').fill('french@example.test');await p.locator('#driver-make').fill('Toyota');await p.locator('#driver-model').fill('Corolla');await p.locator('#driver-payment').selectOption('mobile_money');await lang(p,'fr');
+  assert.equal(await p.getByLabel('Nom',{exact:true}).inputValue(),'Cash');assert.equal(await p.locator('#driver-payment').inputValue(),'mobile_money');await p.getByLabel('Marque (facultatif)').waitFor();await p.locator('#driver-auth button[type=submit]').click();await p.getByText('Ce champ est obligatoire.',{exact:true}).first().waitFor();
+  await p.locator('#driver-password').fill('french-demo-password');await p.locator('#driver-plate').fill('CASH 101');await shots(p,'french-web-signup');await audit(p);await p.locator('#driver-auth button[type=submit]').click();await p.getByText('Bonjour, Cash',{exact:true}).waitFor();assert.equal(await p.locator('html').getAttribute('lang'),'fr');await audit(p);await shots(p,'french-web-sites');
+ });
+ let subscription;
+ await check('mobile subscription and account stay bilingual without altering the QR or saved data',async()=>{
+  subscription=await post(context,'/api/driver/subscriptions',{zone:'CG-01',plate:'CASH 101',idempotencyKey:randomUUID()});const pay=await post(context,'/api/payment',{idempotencyKey:randomUUID()},{Authorization:'Bearer '+subscription.accessToken});app.applyEvent(randomUUID(),pay.attempt,'confirmed');
+  await p.goto(base+'/mobile/driver#pass='+subscription.accessToken);await p.getByRole('button',{name:'Afficher le code QR d’entrée',exact:true}).click();await p.locator('.entry-code-image').waitFor();const before=await p.locator('.entry-code-image').getAttribute('src');await lang(p,'en');assert.equal(await p.locator('.entry-code-image').getAttribute('src'),before);await p.getByText('Mobile money',{exact:true}).waitFor();await lang(p,'fr');await p.getByText('Monnaie mobile',{exact:true}).waitFor();await audit(p);await shots(p,'french-mobile-subscription');
+  await p.locator('[data-mobile-tab="account"]').click();await p.getByRole('heading',{name:'Cash',exact:true}).waitFor();assert.equal(await p.locator('#account-payment').inputValue(),'mobile_money');await audit(p);await shots(p,'french-mobile-account');await p.reload();assert.equal(await p.locator('html').getAttribute('lang'),'fr');
+  for(const tab of['sites','history','passes']){await p.locator(`[data-mobile-tab="${tab}"]`).click();await audit(p);}await p.locator('[data-mobile-tab="sites"]').click();await p.locator('[data-site-detail]').first().click();await audit(p);await p.locator('.sheet-close').click();await p.locator('#explore-plans').click();await audit(p);
+ });
+ await check('desktop wallet, pass, subscriptions and history translate, including dynamic amounts',async()=>{
+  for(const section of ['passes','plans','history']){await p.goto(base+'/?section='+section);await p.locator('[data-section="'+section+'"].selected').waitFor();await audit(p);}
+  await p.goto(base+'/#pass='+subscription.accessToken);await p.getByRole('button',{name:'Afficher le code QR d’entrée',exact:true}).waitFor();await audit(p);await shots(p,'french-web-pass');
+  const auth=await browser.newContext({viewport:{width:390,height:844}});await stubMapTiles(auth);const a=await auth.newPage();await a.goto(base+'/mobile/driver?section=account&lang=fr');await a.locator('#mobile-signup-mode').click();await a.getByLabel('Marque (facultatif)').waitFor();await audit(a);await a.screenshot({path:'test-results/french-mobile-signup.png',fullPage:true});await auth.close();
+ });
+ await check('management tabs translate and submitted roles, values and staff permissions remain canonical',async()=>{
+  await m.goto(base+'/management');await lang(m,'fr');await m.getByLabel('Mot de passe',{exact:true}).fill(app.access.manager);await m.locator('#login button').click();await m.locator('#ops-site').waitFor();assert.equal(await m.locator('#ops-site').inputValue(),'CG-01');await audit(m);await shots(m,'french-management');
+  for(const tab of['gate','walkins','map','reservations','sessions','payments','reports','sites','staff','issues','history']){await m.locator(`[data-ops-tab="${tab}"]`).click();await m.waitForFunction(t=>document.querySelector(`[data-ops-tab="${t}"]`)?.classList.contains('selected'),tab);await audit(m);if(tab==='gate')await shots(m,'french-gate');}
+  await post(staff,'/api/staff/issues',{reference:subscription.reference,reason:'Available now'});await m.locator('[data-ops-tab="issues"]').click();await m.getByText('Available now',{exact:true}).waitFor();await lang(m,'en');await m.getByText('Available now',{exact:true}).waitFor();await lang(m,'fr');
+ });
+ await check('French walk-in ticket, exit receipt and CSV use the selected language without changing amounts',async()=>{
+  const ticket=await post(staff,'/api/ops/tickets',{zone:'CG-01',plate:'FR 202',idempotencyKey:randomUUID()});const print=await staff.newPage();await print.goto(base+'/api/ops/ticket/print?reference='+ticket.reference+'&lang=fr');await print.getByRole('heading',{name:'PAIEMENT À LA SORTIE',exact:true}).waitFor();await print.getByRole('button',{name:'Imprimer le ticket',exact:true}).waitFor();await audit(print);await print.screenshot({path:'test-results/french-ticket.png',fullPage:true});
+  const quote=await post(staff,'/api/ops/ticket/quote',{reference:ticket.reference,idempotencyKey:randomUUID()});await post(staff,'/api/ops/ticket/cash-exit',{reference:ticket.reference,quote:quote.quote.id,amount:quote.quote.total,idempotencyKey:randomUUID()});await print.goto(base+'/api/ops/ticket/print?reference='+ticket.reference+'&receipt=1&lang=fr');await print.getByRole('heading',{name:'REÇU DE PAIEMENT',exact:true}).waitFor();await audit(print);await print.screenshot({path:'test-results/french-receipt.png',fullPage:true});
+  const html=await (await staff.request.get(base+'/api/ops/ticket/print?reference='+ticket.reference+'&receipt=1&lang=fr')).text();assert.match(html,/REÇU DE PAIEMENT/);assert.ok(!html.includes('PAYMENT RECEIPT'));assert.ok(!html.includes('started 30 min'));assert.ok(!html.includes('· cash'));assert.match(html,/tranche de 30 min entamée/);assert.match(html,/espèces/);await lang(print,'en');await print.getByRole('heading',{name:'PAYMENT RECEIPT',exact:true}).waitFor();await lang(print,'fr');await print.getByRole('heading',{name:'REÇU DE PAIEMENT',exact:true}).waitFor();
+  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Kinshasa',year:'numeric',month:'2-digit',day:'2-digit'}).format(Date.now());const csv=await(await staff.request.get(base+'/api/ops/report?zone=CG-01&date='+day+'&format=csv&lang=fr')).text();assert.match(csv,/Identifiant,Heure,Référence,Immatriculation/);assert.match(csv,/espèces/);assert.match(csv,new RegExp(String(quote.quote.total)));await print.close();
+ });
+ await check('mobile Operations translates gate navigation and preserves site restrictions',async()=>{
+  const c=await browser.newContext({viewport:{width:390,height:844}});await stubMapTiles(c);const a=await c.newPage();await a.goto(base+'/mobile/operations');await lang(a,'fr');await a.getByLabel('Mot de passe',{exact:true}).fill(app.access.attendant);await a.locator('#login button').click();await a.locator('#quick-plate').waitFor();assert.equal(await a.locator('#ops-site option').count(),1);assert.equal((await c.request.get(base+'/api/ops/report')).status(),403);await audit(a);await shots(a,'french-mobile-operations');for(const tab of['walkins','overview','more']){await a.locator(`[data-mobile-tab="${tab}"]`).click();await audit(a);}await c.close();
+ });
+ await check('English can be restored and cross-tab preference is remembered',async()=>{await p.goto(base+'/?lang=fr');await lang(p,'en');await p.getByRole('button',{name:'Find parking',exact:true}).waitFor();await p.reload();assert.equal(await p.locator('html').getAttribute('lang'),'en');await lang(p,'fr');const other=await context.newPage();await other.goto(base+'/mobile/driver');await other.getByRole('heading',{name:'Où allez-vous ?',exact:true}).waitFor();await other.close();});
+ assert.deepEqual(errors,[]);assert.deepEqual([...untranslated],[],'All visible application-owned text must have a reviewed translation');writeFileSync('test-results/i18n-browser-report.json',JSON.stringify({checks,errors,untranslated:[...untranslated]},null,2));console.log('Unreviewed text:',JSON.stringify([...untranslated]));console.log(`${checks.length} bilingual browser checks passed.`);
+}finally{writeFileSync('test-results/i18n-unreviewed.json',JSON.stringify([...untranslated],null,2));await browser.close();await app.close();rmSync(dir,{recursive:true,force:true});}

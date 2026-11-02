@@ -1,0 +1,11 @@
+.git/
+.local/
+node_modules/
+test-results/
+tests/
+docs/
+mobile/
+.env*
+*.sqlite*
+*.log
+**/.DS_Store

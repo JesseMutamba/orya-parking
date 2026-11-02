@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-const access = JSON.parse(readFileSync(new URL('./.local/access.json', import.meta.url), 'utf8'));
+import {resolve} from 'node:path';
+const access = JSON.parse(readFileSync(process.env.ORYA_DATA_DIR?resolve(process.env.ORYA_DATA_DIR,'access.json'):new URL('./.local/access.json', import.meta.url), 'utf8'));
 if (process.argv[2] === 'access') {
   console.log(`Local demo credentials (do not share publicly)\nattendant: ${access.attendant}\nmanager: ${access.manager}`);
 } else if (process.argv[2] === 'simulate') {
