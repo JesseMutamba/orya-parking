@@ -39,8 +39,13 @@ jobs:
           retention-days: 14
       - name: Boot-test release code in Android emulator
         run: |
+          export ANDROID_USER_HOME="$RUNNER_TEMP/orya-android"
+          export ANDROID_EMULATOR_HOME="$ANDROID_USER_HOME"
+          export ANDROID_AVD_HOME="$ANDROID_USER_HOME/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'system-images;android-35;google_apis;x86_64'
-          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name orya-beta --package 'system-images;android-35;google_apis;x86_64' --device pixel_6
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name orya-beta --path "$ANDROID_AVD_HOME/orya-beta.avd" --package 'system-images;android-35;google_apis;x86_64' --device pixel_6
+          "$ANDROID_HOME/emulator/emulator" -list-avds
           sudo chmod a+rw /dev/kvm
           mkdir -p beta-evidence
           QT_QPA_PLATFORM=offscreen "$ANDROID_HOME/emulator/emulator" -avd orya-beta -no-window -gpu software -no-audio -no-boot-anim -no-snapshot > beta-evidence/emulator.log 2>&1 &
