@@ -67,6 +67,8 @@ jobs:
           retention-days: 14
   ios:
     runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     timeout-minutes: 25
     strategy:
       fail-fast: false
@@ -90,6 +92,7 @@ jobs:
           ORYA_SCHEME: ${{ matrix.scheme }}
         run: python3 mobile/ios/smoke.py
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ios-${{ matrix.scheme }}-launch-evidence
           path: beta-evidence/
