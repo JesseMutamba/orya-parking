@@ -32,10 +32,17 @@ for role, expected in [('parking', 'Where are you heading?'), ('operations', 'Si
     deadline = time.monotonic() + 60
     found = False
     while time.monotonic() < deadline:
-        run(adb, 'shell', 'uiautomator', 'dump', '/sdcard/orya-window.xml')
-        xml = run(adb, 'exec-out', 'cat', '/sdcard/orya-window.xml')
-        (out / (role + '.xml')).write_bytes(xml)
-        nodes = ET.fromstring(xml).iter('node')
+        # UIAutomator can report a null root while a newly launched WebView is
+        # still attaching. Retry within the same deadline; never count it as a pass.
+        try:
+            run(adb, 'shell', 'rm', '-f', '/sdcard/orya-window.xml')
+            run(adb, 'shell', 'uiautomator', 'dump', '/sdcard/orya-window.xml')
+            xml = run(adb, 'exec-out', 'cat', '/sdcard/orya-window.xml')
+            (out / (role + '.xml')).write_bytes(xml)
+            nodes = ET.fromstring(xml).iter('node')
+        except (subprocess.SubprocessError, ET.ParseError):
+            time.sleep(3)
+            continue
         if any(expected in (e.get('text', '') + e.get('content-desc', '')) for e in nodes):
             found = True; break
         time.sleep(3)
