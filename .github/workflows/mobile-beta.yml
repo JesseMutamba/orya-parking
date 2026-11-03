@@ -9,10 +9,10 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -36,6 +36,19 @@ jobs:
           name: android-unsigned-beta
           path: beta-artifacts/
           if-no-files-found: error
+          retention-days: 14
+      - name: Boot-test release code in Android emulator
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'system-images;android-35;google_apis;x86_64'
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name orya-beta --package 'system-images;android-35;google_apis;x86_64' --device pixel_6
+          sudo chmod a+rw /dev/kvm
+          "$ANDROID_HOME/emulator/emulator" -avd orya-beta -no-window -gpu swiftshader_indirect -no-audio -no-boot-anim -no-snapshot > /tmp/orya-emulator.log 2>&1 &
+          python3 mobile/android/smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-launch-evidence
+          path: beta-evidence/
           retention-days: 14
       - uses: actions/upload-artifact@v4
         if: always()
@@ -63,6 +76,16 @@ jobs:
       - name: Compile simulator release
         run: |
           xcodebuild -project mobile/ios/OryaMobile.xcodeproj -scheme "${{ matrix.scheme }}" -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "simulator/${{ matrix.scheme }}" CODE_SIGNING_ALLOWED=NO build
+      - name: Launch the simulator app
+        env:
+          ORYA_SCHEME: ${{ matrix.scheme }}
+        run: python3 mobile/ios/smoke.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ matrix.scheme }}-launch-evidence
+          path: beta-evidence/
+          if-no-files-found: error
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         with:
           name: ios-${{ matrix.scheme }}-unsigned-build

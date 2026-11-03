@@ -111,6 +111,10 @@ public final class MainActivity extends Activity {
                 if (cameraRequest == request) cameraRequest = null;
             }
             @Override public boolean onCreateWindow(WebView view, boolean dialog, boolean userGesture, Message message) {
+                WebView.HitTestResult hit = view.getHitTestResult();
+                if (userGesture && hit != null && OriginPolicy.externalHttps(hit.getExtra())) {
+                    openExternal(hit.getExtra()); return false;
+                }
                 if (!BuildConfig.OPERATIONS || !userGesture || ticketDialog != null) return false;
                 WebView popup = createTicketPreview();
                 ((WebView.WebViewTransport) message.obj).setWebView(popup);
@@ -252,6 +256,9 @@ public final class MainActivity extends Activity {
         else if (web.canGoBack()) web.goBack();
         else finish();
     }
+    // Legacy hardware/system back on API 26-32. API 33+ uses the registered
+    // OnBackInvokedCallback above, including predictive back on API 36+.
+    @SuppressLint("GestureBackNavigation")
     @SuppressWarnings("deprecation") @Override public void onBackPressed() { goBack(); }
     @Override protected void onPause() { super.onPause(); CookieManager.getInstance().flush(); web.onPause(); }
     @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); }
