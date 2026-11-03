@@ -1,0 +1,14 @@
+<resources>
+    <string name="beta">BETA · DEMO</string>
+    <string name="reload">Reload</string>
+    <string name="offline">Cannot reach Orya. Check your connection and try again. Parking and payment status are unknown until reconnected.</string>
+    <string name="retry">Try again</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="done">Done</string>
+    <string name="print">Print ticket</string>
+    <string name="ticket">Ticket preview</string>
+    <string name="ticket_unavailable">Ticket unavailable. Close this preview and try again.</string>
+    <string name="download_unavailable">Use the desktop web app to export this report during the beta.</string>
+    <string name="no_browser">No browser is available to open this link.</string>
+</resources>

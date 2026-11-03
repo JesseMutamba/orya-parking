@@ -1,0 +1,342 @@
+// !$*UTF8*$!
+{
+	"archiveVersion" = "1";
+	"classes" = {
+	};
+	"objectVersion" = "56";
+	"objects" = {
+		"41CF6794BA4200B839C53531" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/OryaApp.swift";
+			"sourceTree" = "<group>";
+		};
+		"D80C9BF910F144738EF98372" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/BackendAddress.swift";
+			"sourceTree" = "<group>";
+		};
+		"A4CC6BC01A927E2A78FD3BEC" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.xml";
+			"path" = "PrivacyInfo.xcprivacy";
+			"sourceTree" = "<group>";
+		};
+		"6F6398AE596F595754C797E3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.plist.strings";
+			"name" = "en";
+			"path" = "en.lproj/InfoPlist.strings";
+			"sourceTree" = "<group>";
+		};
+		"4B1E2AC6F41220170947AD7B" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.plist.strings";
+			"name" = "fr";
+			"path" = "fr.lproj/InfoPlist.strings";
+			"sourceTree" = "<group>";
+		};
+		"B4D143154ED15466E3DCD96E" = {
+			"isa" = "PBXVariantGroup";
+			"children" = ("6F6398AE596F595754C797E3", "4B1E2AC6F41220170947AD7B");
+			"name" = "InfoPlist.strings";
+			"sourceTree" = "<group>";
+		};
+		"433548979C024CC63B5F3B8D" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"buildSettings" = {
+				"CLANG_ENABLE_MODULES" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SDKROOT" = "iphoneos";
+				"SWIFT_VERSION" = "5.0";
+				"ONLY_ACTIVE_ARCH" = "YES";
+			};
+		};
+		"B800A40FDE6F0A0218D9BCD2" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"buildSettings" = {
+				"CLANG_ENABLE_MODULES" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"SDKROOT" = "iphoneos";
+				"SWIFT_VERSION" = "5.0";
+				"ONLY_ACTIVE_ARCH" = "NO";
+			};
+		};
+		"691FD68057D3B5481ADB4FBC" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = ("433548979C024CC63B5F3B8D", "B800A40FDE6F0A0218D9BCD2");
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"999CBDAB574404FAE04118E3" = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.application";
+			"includeInIndex" = "0";
+			"path" = "OryaParking.app";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"EC7963C0A859D398B96A4BA0" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder.assetcatalog";
+			"path" = "OryaParking/Assets.xcassets";
+			"sourceTree" = "<group>";
+		};
+		"D654C59A7CB41FCB5D60B6C3" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "41CF6794BA4200B839C53531";
+		};
+		"CD65EE576A097059502AE0F1" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "D80C9BF910F144738EF98372";
+		};
+		"1078D1973A5FF74FA55B444E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B4D143154ED15466E3DCD96E";
+		};
+		"71BF9FE11E11A7CB81A90150" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "A4CC6BC01A927E2A78FD3BEC";
+		};
+		"20DF9AD16510CB0AB24AF480" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "EC7963C0A859D398B96A4BA0";
+		};
+		"CD29A2523AF592AE30FB407C" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = ("D654C59A7CB41FCB5D60B6C3", "CD65EE576A097059502AE0F1");
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"5ABDED33169A3BD1B896B6F5" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"118EEE700A21FAE3F1A30BCC" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = ("20DF9AD16510CB0AB24AF480", "1078D1973A5FF74FA55B444E", "71BF9FE11E11A7CB81A90150");
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"A9F20C2EE6C95561B0C00C59" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.orya.parking.beta";
+				"DEVELOPMENT_TEAM" = "";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"TARGETED_DEVICE_FAMILY" = "1,2";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"INFOPLIST_FILE" = "OryaParking/Info-Debug.plist";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"MARKETING_VERSION" = "0.1.0";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"SWIFT_VERSION" = "5.0";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"LD_RUNPATH_SEARCH_PATHS" = "$(inherited) @executable_path/Frameworks";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+			};
+		};
+		"393A3031FBD2089F814AE978" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.orya.parking.beta";
+				"DEVELOPMENT_TEAM" = "";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"TARGETED_DEVICE_FAMILY" = "1,2";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"INFOPLIST_FILE" = "OryaParking/Info-Release.plist";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"MARKETING_VERSION" = "0.1.0";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"SWIFT_VERSION" = "5.0";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"LD_RUNPATH_SEARCH_PATHS" = "$(inherited) @executable_path/Frameworks";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited)";
+			};
+		};
+		"963E19FC1A1C80BBAD45E8D9" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = ("A9F20C2EE6C95561B0C00C59", "393A3031FBD2089F814AE978");
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"F6FB744D7A39E01E53E258C2" = {
+			"isa" = "PBXNativeTarget";
+			"buildConfigurationList" = "963E19FC1A1C80BBAD45E8D9";
+			"buildPhases" = ("CD29A2523AF592AE30FB407C", "5ABDED33169A3BD1B896B6F5", "118EEE700A21FAE3F1A30BCC");
+			"buildRules" = ();
+			"dependencies" = ();
+			"name" = "OryaParking";
+			"productName" = "OryaParking";
+			"productReference" = "999CBDAB574404FAE04118E3";
+			"productType" = "com.apple.product-type.application";
+		};
+		"DBFDC6B2CB535F343196DA99" = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.application";
+			"includeInIndex" = "0";
+			"path" = "OryaOperations.app";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"02CAA9BAD46404F9A9CB3470" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder.assetcatalog";
+			"path" = "OryaOperations/Assets.xcassets";
+			"sourceTree" = "<group>";
+		};
+		"4F75BEA9D89621D08674EB20" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "41CF6794BA4200B839C53531";
+		};
+		"B1B4F5D932F98D111E3B4B75" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "D80C9BF910F144738EF98372";
+		};
+		"5BCE4A54AD033ECF38131F2C" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B4D143154ED15466E3DCD96E";
+		};
+		"752F445DDF098EEF48B36B39" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "A4CC6BC01A927E2A78FD3BEC";
+		};
+		"7702FBECBC33DE089C39285B" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "02CAA9BAD46404F9A9CB3470";
+		};
+		"C68B9A72C1A2E998343BD2B8" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = ("4F75BEA9D89621D08674EB20", "B1B4F5D932F98D111E3B4B75");
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"DCCDA7142702EBFC1111F360" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = ();
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"576B3F456F01CAE5DED9DF5E" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = ("7702FBECBC33DE089C39285B", "5BCE4A54AD033ECF38131F2C", "752F445DDF098EEF48B36B39");
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"F74814E54251E6D1D77782BF" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.orya.operations.beta";
+				"DEVELOPMENT_TEAM" = "";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"TARGETED_DEVICE_FAMILY" = "1,2";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"INFOPLIST_FILE" = "OryaOperations/Info-Debug.plist";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"MARKETING_VERSION" = "0.1.0";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"SWIFT_VERSION" = "5.0";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"LD_RUNPATH_SEARCH_PATHS" = "$(inherited) @executable_path/Frameworks";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+			};
+		};
+		"A68B837B0958BCA32F02AB83" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"buildSettings" = {
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.orya.operations.beta";
+				"DEVELOPMENT_TEAM" = "";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"TARGETED_DEVICE_FAMILY" = "1,2";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"INFOPLIST_FILE" = "OryaOperations/Info-Release.plist";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"MARKETING_VERSION" = "0.1.0";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"SWIFT_VERSION" = "5.0";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+				"LD_RUNPATH_SEARCH_PATHS" = "$(inherited) @executable_path/Frameworks";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "$(inherited)";
+			};
+		};
+		"94F39460567685D6D16A782B" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = ("F74814E54251E6D1D77782BF", "A68B837B0958BCA32F02AB83");
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"30EDB8F922AF4633E6B430BC" = {
+			"isa" = "PBXNativeTarget";
+			"buildConfigurationList" = "94F39460567685D6D16A782B";
+			"buildPhases" = ("C68B9A72C1A2E998343BD2B8", "DCCDA7142702EBFC1111F360", "576B3F456F01CAE5DED9DF5E");
+			"buildRules" = ();
+			"dependencies" = ();
+			"name" = "OryaOperations";
+			"productName" = "OryaOperations";
+			"productReference" = "DBFDC6B2CB535F343196DA99";
+			"productType" = "com.apple.product-type.application";
+		};
+		"0A3E27B8CA818264D75C8D81" = {
+			"isa" = "PBXGroup";
+			"children" = ("999CBDAB574404FAE04118E3", "DBFDC6B2CB535F343196DA99");
+			"name" = "Products";
+			"sourceTree" = "<group>";
+		};
+		"0D6E4079E36703EBD37C0072" = {
+			"isa" = "PBXGroup";
+			"children" = ("41CF6794BA4200B839C53531", "D80C9BF910F144738EF98372", "A4CC6BC01A927E2A78FD3BEC", "B4D143154ED15466E3DCD96E", "EC7963C0A859D398B96A4BA0", "02CAA9BAD46404F9A9CB3470", "0A3E27B8CA818264D75C8D81");
+			"sourceTree" = "<group>";
+		};
+		"244210E48437B6556980A702" = {
+			"isa" = "PBXProject";
+			"attributes" = {
+				"BuildIndependentTargetsInParallel" = "YES";
+				"LastUpgradeCheck" = "2600";
+				"TargetAttributes" = {
+					"F6FB744D7A39E01E53E258C2" = {
+						"CreatedOnToolsVersion" = "26.0";
+						"ProvisioningStyle" = "Automatic";
+					};
+					"30EDB8F922AF4633E6B430BC" = {
+						"CreatedOnToolsVersion" = "26.0";
+						"ProvisioningStyle" = "Automatic";
+					};
+				};
+			};
+			"buildConfigurationList" = "691FD68057D3B5481ADB4FBC";
+			"compatibilityVersion" = "Xcode 14.0";
+			"developmentRegion" = "en";
+			"hasScannedForEncodings" = "0";
+			"knownRegions" = ("en", "fr", "Base");
+			"mainGroup" = "0D6E4079E36703EBD37C0072";
+			"productRefGroup" = "0A3E27B8CA818264D75C8D81";
+			"projectDirPath" = "";
+			"projectRoot" = "";
+			"targets" = ("F6FB744D7A39E01E53E258C2", "30EDB8F922AF4633E6B430BC");
+		};
+	};
+	"rootObject" = "244210E48437B6556980A702";
+}

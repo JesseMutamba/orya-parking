@@ -1,0 +1,14 @@
+<resources>
+    <string name="beta">BÊTA · DÉMO</string>
+    <string name="reload">Actualiser</string>
+    <string name="offline">Impossible de joindre Orya. Vérifiez votre connexion et réessayez. L’état du stationnement et du paiement reste inconnu jusqu’au rétablissement de la connexion.</string>
+    <string name="retry">Réessayer</string>
+    <string name="confirm">Confirmer</string>
+    <string name="cancel">Annuler</string>
+    <string name="done">Terminé</string>
+    <string name="print">Imprimer le ticket</string>
+    <string name="ticket">Aperçu du ticket</string>
+    <string name="ticket_unavailable">Ticket indisponible. Fermez cet aperçu et réessayez.</string>
+    <string name="download_unavailable">Utilisez la version web sur ordinateur pour exporter ce rapport pendant la bêta.</string>
+    <string name="no_browser">Aucun navigateur ne peut ouvrir ce lien.</string>
+</resources>

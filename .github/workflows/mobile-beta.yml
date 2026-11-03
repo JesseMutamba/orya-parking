@@ -1,0 +1,71 @@
+name: Mobile beta builds
+on:
+  push:
+    branches: ['beta/mobile-*']
+    paths: ['mobile/**', '.github/workflows/mobile-beta.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.2.1'
+      - name: Test, lint and build both unsigned release APKs
+        run: gradle -p mobile/android test lint assembleRelease --no-daemon
+      - name: Prepare APKs for private local signing
+        run: |
+          mkdir -p beta-artifacts
+          cp mobile/android/app/build/outputs/apk/driver/release/*-unsigned.apk beta-artifacts/orya-parking-unsigned.apk
+          cp mobile/android/app/build/outputs/apk/operations/release/*-unsigned.apk beta-artifacts/orya-operations-unsigned.apk
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -c -P 16 4 beta-artifacts/orya-parking-unsigned.apk
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -c -P 16 4 beta-artifacts/orya-operations-unsigned.apk
+          cp "$ANDROID_HOME/build-tools/36.0.0/lib/apksigner.jar" beta-artifacts/
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging beta-artifacts/orya-parking-unsigned.apk > beta-artifacts/parking-package.txt
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging beta-artifacts/orya-operations-unsigned.apk > beta-artifacts/operations-package.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-unsigned-beta
+          path: beta-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-test-reports
+          path: mobile/android/app/build/reports/
+          retention-days: 14
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        scheme: [OryaParking, OryaOperations]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate generated project
+        run: |
+          python3 mobile/ios/generate-project.py
+          git diff --exit-code -- mobile/ios
+          xcodebuild -version
+      - name: Compile unsigned iPhone release
+        run: |
+          xcodebuild -project mobile/ios/OryaMobile.xcodeproj -scheme "${{ matrix.scheme }}" -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath "build/${{ matrix.scheme }}" CODE_SIGNING_ALLOWED=NO build
+      - name: Compile simulator release
+        run: |
+          xcodebuild -project mobile/ios/OryaMobile.xcodeproj -scheme "${{ matrix.scheme }}" -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "simulator/${{ matrix.scheme }}" CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ matrix.scheme }}-unsigned-build
+          path: build/${{ matrix.scheme }}/Build/Products/Release-iphoneos/
+          if-no-files-found: error
+          retention-days: 14
