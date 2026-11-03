@@ -168,10 +168,19 @@ final class ParkingController: UIViewController, WKNavigationDelegate, WKUIDeleg
         web.load(URLRequest(url: base.appendingPathComponent(Product.path), cachePolicy: .reloadIgnoringLocalCacheData))
     }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { spinner.stopAnimating(); errorPanel.isHidden = true }
-    private func failed(_ error: Error) { if (error as NSError).code != NSURLErrorCancelled { spinner.stopAnimating(); errorPanel.isHidden = false } }
+    private func failed(_ error: Error) {
+        let failure = error as NSError
+        if failure.code != NSURLErrorCancelled {
+            NSLog("Orya navigation failure: %@ %ld", failure.domain, failure.code)
+            spinner.stopAnimating(); errorPanel.isHidden = false
+        }
+    }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { failed(error) }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { failed(error) }
-    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { errorPanel.isHidden = false }
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        NSLog("Orya web content process terminated")
+        errorPanel.isHidden = false
+    }
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard let url = action.request.url else { decisionHandler(.cancel); return }
         if BackendAddress.sameOrigin(url,base), url.path == Product.path { decisionHandler(.allow); return }

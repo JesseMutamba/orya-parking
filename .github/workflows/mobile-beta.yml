@@ -42,8 +42,12 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'system-images;android-35;google_apis;x86_64'
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name orya-beta --package 'system-images;android-35;google_apis;x86_64' --device pixel_6
           sudo chmod a+rw /dev/kvm
-          "$ANDROID_HOME/emulator/emulator" -avd orya-beta -no-window -gpu swiftshader_indirect -no-audio -no-boot-anim -no-snapshot > /tmp/orya-emulator.log 2>&1 &
-          python3 mobile/android/smoke.py
+          mkdir -p beta-evidence
+          QT_QPA_PLATFORM=offscreen "$ANDROID_HOME/emulator/emulator" -avd orya-beta -no-window -gpu software -no-audio -no-boot-anim -no-snapshot > beta-evidence/emulator.log 2>&1 &
+          emulator_pid=$!
+          sleep 5
+          if ! kill -0 "$emulator_pid"; then cat beta-evidence/emulator.log; exit 1; fi
+          python3 mobile/android/smoke.py || { cat beta-evidence/emulator.log; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
