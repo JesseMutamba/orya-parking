@@ -4,7 +4,7 @@ Distribution artifacts remain unsigned for private local signing. The ephemeral
 key and emulator installs are never uploaded, and no live account is signed in.
 """
 from pathlib import Path
-import os, subprocess, time, xml.etree.ElementTree as ET
+import os, re, subprocess, time, xml.etree.ElementTree as ET
 
 sdk = Path(os.environ['ANDROID_HOME'])
 adb = str(sdk / 'platform-tools/adb')
@@ -31,6 +31,7 @@ for role, expected in [('parking', 'Where are you heading?'), ('operations', 'Si
     run(adb, 'shell', 'am', 'start', '-W', '-n', package + '/com.orya.mobile.MainActivity')
     deadline = time.monotonic() + 60
     found = False
+    launcher_recovered = False
     while time.monotonic() < deadline:
         # UIAutomator can report a null root while a newly launched WebView is
         # still attaching. Retry within the same deadline; never count it as a pass.
@@ -39,9 +40,17 @@ for role, expected in [('parking', 'Where are you heading?'), ('operations', 'Si
             run(adb, 'shell', 'uiautomator', 'dump', '/sdcard/orya-window.xml')
             xml = run(adb, 'exec-out', 'cat', '/sdcard/orya-window.xml')
             (out / (role + '.xml')).write_bytes(xml)
-            nodes = ET.fromstring(xml).iter('node')
+            nodes = list(ET.fromstring(xml).iter('node'))
         except (subprocess.SubprocessError, ET.ParseError):
             time.sleep(3)
+            continue
+        if not launcher_recovered and any(e.get('text') == "Pixel Launcher isn't responding" for e in nodes):
+            # Close only this named emulator system app; an Orya error still fails.
+            (out / 'emulator-launcher-error.png').write_bytes(run(adb, 'exec-out', 'screencap', '-p'))
+            close = next(e for e in nodes if e.get('resource-id') == 'android:id/aerr_close')
+            x1, y1, x2, y2 = map(int, re.findall(r'\d+', close.get('bounds')))
+            run(adb, 'shell', 'input', 'tap', str((x1+x2)//2), str((y1+y2)//2))
+            launcher_recovered = True
             continue
         if any(expected in (e.get('text', '') + e.get('content-desc', '')) for e in nodes):
             found = True; break

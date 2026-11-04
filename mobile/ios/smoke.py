@@ -7,7 +7,8 @@ assert scheme in ['OryaParking', 'OryaOperations']
 devices = json.loads(run('xcrun', 'simctl', 'list', 'devices', 'available', '-j'))['devices']
 runtimes = json.loads(run('xcrun', 'simctl', 'list', 'runtimes', '-j'))['runtimes']
 runtime = max((r for r in runtimes if r.get('isAvailable') and r['identifier'] in devices and 'iOS' in r['identifier']), key=lambda r: tuple(map(int, r['version'].split('.'))))
-device = next(d for d in devices[runtime['identifier']] if d['name'].startswith('iPhone'))
+phones = [d for d in devices[runtime['identifier']] if d['name'].startswith('iPhone')]
+device = next((d for d in phones if d['name'] == 'iPhone SE (3rd generation)'), phones[0])
 print('Testing', runtime['name'], device['name'], flush=True)
 if device['state'] != 'Booted': run('xcrun', 'simctl', 'boot', device['udid'])
 run('xcrun', 'simctl', 'bootstatus', device['udid'], '-b')
